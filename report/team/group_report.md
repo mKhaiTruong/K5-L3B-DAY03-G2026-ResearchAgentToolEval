@@ -37,8 +37,8 @@ Ví dụ: "Research agent: tìm tin theo từ khóa / theo tài khoản, đọc 
 | Tên tool | Làm được gì | Tool mới nhóm thêm? |
 |---|---|---|
 | clarify | hỏi lại người dùng khi thiếu thông tin | không |
-|  |  |  |
-|  |  |  |
+| extract_claims | tách claim từ kết quả nghiên cứu đã có và giữ nguồn | có |
+| deduplicate_items | loại kết quả trùng theo URL hoặc tiêu đề | có |
 
 ### A3. Câu hỏi mẫu để thử
 
@@ -52,7 +52,10 @@ Ví dụ: "Research agent: tìm tin theo từ khóa / theo tài khoản, đọc 
 
 > Tóm tắt các thay đổi chính trong `starter_v0/artifacts/system_prompt.md` và `starter_v0/artifacts/tools.yaml`, và tool mới nhóm viết (tên, làm gì, khi nào agent nên gọi).
 
--
+- v1: yêu cầu hỏi lại khi thông tin còn thiếu thay vì tự đoán.
+- v2: làm rõ `lookup` dùng `topic=news` cho tin tức và `topic=general` cho tra cứu thông thường.
+- v3: yêu cầu xác nhận yes/no trước khi gọi `send` với `confirmed=true`.
+- CP3: thêm `extract_claims` để chuẩn hóa claim có nguồn và `deduplicate_items` để loại kết quả trùng trước khi format. Cả hai là local formatter, không gọi mạng và trả error dict khi input sai.
 
 ## 4. Kết quả — PHẦN B: Chi tiết và bằng chứng
 
@@ -63,9 +66,9 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 | Version | Changed Artifact | Hypothesis | Metric Before | Metric After | Run File |
 |---|---|---|---:|---:|---|
 | v0 | baseline |  |  |  |  |
-| v1 |  |  |  |  |  |
-| v2 |  |  |  |  |  |
-| v3 |  |  |  |  |  |
+| v1 | `system_prompt.md` | hỏi lại khi thiếu thông tin | 0.750 | 0.750 | `runs/v1_B_base_openrouter_20261110T190522411207.json` |
+| v2 | `tools.yaml` | phân biệt news/general để route lookup | 0.750 | 0.850 | `runs/v2_B_base_openrouter_20261110T193636431059.json` |
+| v3 | `system_prompt.md` | xác nhận trước khi gửi | 0.850 | 0.900 | `runs/v3_B_base_openrouter_20261110T193813200280.json` |
 
 ### B2. Failure Analysis
 
@@ -95,8 +98,8 @@ Lấy từ `starter_v0/transcripts/*.transcript.json`.
 
 | Item | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
-| Tool mới (`tools/<tên>/`) |  |  |  |
-| Unit test tool mới (≥ 3 test/tool) | `pytest` output (0 failed) |  |  |
+| Tool mới (`tools/<tên>/`) | `starter_v0/tools/extract_claims/`, `starter_v0/tools/deduplicate_items/` | Đã đăng ký trong `tools/__init__.py` và `artifacts/tools.yaml`; chạy offline | Không tự xác minh claim, không fetch/gộp/xếp hạng |
+| Unit test tool mới (≥ 3 test/tool) | `starter_v0/tests/test_tools_todo.py` | 3 test/tool: happy path, input sai và dữ liệu lỗi; lỗi trả dict thay vì raise | Vẫn cần test với dữ liệu nguồn thực tế ở CP4/CP5 |
 | UI (lệnh chạy + link dùng thử) |  |  |  |
 
 Tool unit tests: số test đã viết, và một ví dụ lỗi mà unit test bắt được nhưng eval không bắt được.

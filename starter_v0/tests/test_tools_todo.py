@@ -104,19 +104,41 @@ def test_policy_instruction_like_lines_go_to_untrusted_text() -> None:
     pytest.skip(TODO)
 
 
-# ---------------- YOUR NEW TOOL(S) ----------------
-# Write at least 3 tests per tool your team adds:
-#   1. happy path (mocked if it calls an API)
-#   2. bad / missing input from the model (empty string, wrong type, out-of-enum value)
-#   3. failure path (missing key, HTTP error, timeout) -> returns error dict, does not raise
+# ---------------- Team tools ----------------
 
-def test_my_new_tool_happy_path() -> None:
-    pytest.skip(TODO)
-
-
-def test_my_new_tool_bad_input_from_model() -> None:
-    pytest.skip(TODO)
+def test_extract_claims_keeps_claim_and_source() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]([
+        {"summary": "AI adoption grew.", "source": "Example News"},
+        {"title": "No claim"},
+    ])
+    assert result["claim_count"] == 1
+    assert result["claims"] == [{"claim": "AI adoption grew.", "source": "Example News"}]
 
 
-def test_my_new_tool_failure_returns_error_dict() -> None:
-    pytest.skip(TODO)
+def test_extract_claims_rejects_non_list_input() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]("not-a-list")
+    assert result == {"tool": "extract_claims", "error": "items_must_be_list"}
+
+
+def test_extract_claims_skips_malformed_items_without_raising() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]([None, {"summary": ""}, 4])
+    assert result["claim_count"] == 0
+    assert result["claims"] == []
+
+
+def test_deduplicate_items_keeps_first_url() -> None:
+    items = [{"url": "https://example.com/a", "title": "First"}, {"url": " HTTPS://EXAMPLE.COM/A ", "title": "Second"}]
+    result = TOOL_FUNCTIONS["deduplicate_items"](items)
+    assert result["items"] == [items[0]]
+    assert result["removed_count"] == 1
+
+
+def test_deduplicate_items_rejects_unknown_key() -> None:
+    result = TOOL_FUNCTIONS["deduplicate_items"]([], key="summary")
+    assert result == {"tool": "deduplicate_items", "error": "invalid_key"}
+
+
+def test_deduplicate_items_skips_malformed_items_without_raising() -> None:
+    result = TOOL_FUNCTIONS["deduplicate_items"]([None, {"title": "Kept"}, 4], key="title")
+    assert result["items"] == [{"title": "Kept"}]
+    assert result["removed_count"] == 2

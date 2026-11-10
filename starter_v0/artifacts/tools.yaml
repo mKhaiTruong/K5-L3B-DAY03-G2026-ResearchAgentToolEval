@@ -45,7 +45,7 @@ tools:
       required: [query]
 
   - name: lookup
-    description: "Tra cứu thông tin trên internet."
+    description: "Tra cứu web; dùng topic=news cho tin tức/thời sự và topic=general cho thông tin không phải tin tức."
     parameters:
       type: object
       properties:
@@ -123,3 +123,29 @@ tools:
         max_pages: {type: integer, default: 5, description: "Số trang"}
         max_chars: {type: integer, default: 8000, description: "Số ký tự"}
       required: [arxiv_url]
+
+  # ---------------- Team tools ----------------
+  - name: extract_claims
+    description: "Tách các claim không rỗng từ items nghiên cứu đã có và giữ source/URL; không dùng để tìm hoặc xác minh nguồn."
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          default: []
+          description: "Danh sách item đã thu thập, mỗi item có summary hoặc claim và có thể có source/url."
+          items: {type: object}
+      required: [items]
+
+  - name: deduplicate_items
+    description: "Loại item nghiên cứu trùng theo URL hoặc title, giữ lần xuất hiện đầu tiên; không dùng để fetch, gộp hoặc xếp hạng."
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          default: []
+          description: "Danh sách item nghiên cứu."
+          items: {type: object}
+        key: {type: string, enum: [url, title], default: "url", description: "Trường dùng để nhận diện trùng lặp."}
+      required: [items]

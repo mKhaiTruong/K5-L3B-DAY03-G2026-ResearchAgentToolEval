@@ -3,5 +3,66 @@
   "dataset_role": "group",
   "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "cases": [
+    {
+      "id": "G01_extract_claims_from_results",
+      "phase": "B",
+      "query": "Tách các nhận định chính từ những kết quả nghiên cứu và giữ lại nguồn của từng nhận định.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "extract_claims", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Yêu cầu trích xuất claim và nguồn từ items đã có phải route tới extract_claims."
+      }
+    },
+    {
+      "id": "G02_extract_claims_with_sources",
+      "phase": "B",
+      "query": "Lấy các claim không rỗng trong danh sách bài báo vừa thu thập, không cần tìm thêm trên web.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "extract_claims", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Phân biệt việc trích xuất claim local với việc gọi lookup hoặc fetch."
+      }
+    },
+    {
+      "id": "G03_extract_claims_before_format",
+      "phase": "B",
+      "query": "Trước khi trình bày bản tin, hãy rút ra các claim chính kèm source từ kết quả research.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "extract_claims", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Nhận diện extract_claims như bước xử lý dữ liệu trước format."
+      }
+    },
+    {
+      "id": "G04_deduplicate_by_url",
+      "phase": "B",
+      "query": "Loại các bài nghiên cứu trùng nhau theo URL trước khi tạo bản tin.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "deduplicate_items", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Yêu cầu loại item trùng theo URL phải route tới deduplicate_items với key=url."
+      }
+    },
+    {
+      "id": "G05_deduplicate_by_title",
+      "phase": "B",
+      "query": "Lọc các kết quả có cùng tiêu đề, giữ lại kết quả xuất hiện đầu tiên.",
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "deduplicate_items", "args": {"key": "title"}}]},
+      "metadata": {
+        "what_it_tests": "Từ 'cùng tiêu đề' phải được chuyển thành key=title."
+      }
+    },
+    {
+      "id": "G06_deduplicate_then_extract",
+      "phase": "B",
+      "query": "Hãy loại bài trùng theo URL trong danh sách kết quả hiện có, chưa cần tách claim.",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "deduplicate_items", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Phân biệt bước loại trùng với extract_claims khi user yêu cầu chỉ làm sạch danh sách."
+      }
+    }
+  ]
 }

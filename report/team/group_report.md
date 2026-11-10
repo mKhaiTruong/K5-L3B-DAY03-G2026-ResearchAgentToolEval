@@ -68,7 +68,7 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 | v0 | baseline |  |  |  |  |
 | v1 | `system_prompt.md` | hỏi lại khi thiếu thông tin | 0.750 | 0.750 | `runs/v1_B_base_openrouter_20261110T190522411207.json` |
 | v2 | `tools.yaml` | phân biệt news/general để route lookup | 0.750 | 0.850 | `runs/v2_B_base_openrouter_20261110T193636431059.json` |
-| v3 | `system_prompt.md` | xác nhận trước khi gửi | 0.850 | 0.900 | `runs/v3_B_base_openrouter_20261110T193813200280.json` |
+| v3 | `system_prompt.md` + `tools.yaml` | bắt buộc clarify khi thiếu input, xác nhận trước khi gửi | 0.850 | 1.000 | `runs/v3_B_base_openrouter_20261110T222138486571.json` |
 
 ### B2. Failure Analysis
 

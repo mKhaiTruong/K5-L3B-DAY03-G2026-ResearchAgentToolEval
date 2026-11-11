@@ -37,6 +37,10 @@ def send_telegram(text: str = "", confirmed: bool = False) -> dict[str, Any]:
         response.raise_for_status()
         return {"tool": "send_telegram", "status": "sent"}
     except Exception as exc:
-        msg = str(exc).replace(token or "", "***")
+        # Never leak the bot token in an error message. Mask it only when it is
+        # non-empty: str.replace("", ...) would inject "***" between every character.
+        msg = str(exc)
+        if token:
+            msg = msg.replace(token, "***")
         return err("send_telegram", RuntimeError(msg))
 

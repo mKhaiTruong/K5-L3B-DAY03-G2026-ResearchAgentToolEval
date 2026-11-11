@@ -1,103 +1,13 @@
 {
   "dataset_id": "day03_v2_research_group",
   "dataset_role": "group",
-  "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Batch 1: 6/10 case (3 single + 3 multi), gồm 4 case route tới 2 tool nhóm tự viết (wiki, hackernews) + 1 case out-of-scope. 4 case còn lại cho date_calc/cite_format do thành viên khác thêm, giữ tổng 5 single + 5 multi.",
+  "description": "10 case do NHÓM tự viết (5 single turn + 5 multi turn), hợp nhất từ 3 thành viên sau khi merge: phủ 6 tool mới (wiki, hackernews, date_calc, cite_format, extract_claims, deduplicate_items), 1 case out-of-scope phải trả lời không gọi tool, và 3 case multi-turn kiểm tra giữ/sửa argument qua lượt.",
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
   "cases": [
     {
-
-      "id": "G07_wiki_definition_routing",
-      "phase": "B",
-      "suite": "group",
-      "query": "OpenAI là công ty gì? Trả lời gọn trong 2 câu.",
-      "failure_type": "wrong_tool",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "OpenAI", "sentences": 2}}]},
-      "metadata": {
-        "skill": "routing_entity_definition",
-        "difficulty": "easy",
-        "what_it_tests": "Câu hỏi định nghĩa một thực thể → wiki (không phải lookup/fetch); lấy đúng sentences=2."
-      }
-    },
-    {
-      "id": "G08_hackernews_newest_arg",
-      "phase": "B",
-      "suite": "group",
-      "query": "Trên Hacker News có bài nào mới nhất về MCP không? Lấy 3 bài.",
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "hackernews", "args": {"sort": "date", "limit": 3}}]},
-      "metadata": {
-        "skill": "arg_hn_sort_and_limit",
-        "difficulty": "medium",
-        "what_it_tests": "Nguồn Hacker News → hackernews; 'mới nhất' → sort=date; '3 bài' → limit=3."
-      }
-    },
-    {
-      "id": "G09_translation_out_of_scope",
-      "phase": "B",
-      "suite": "group",
-      "query": "Dịch giúp mình câu sau sang tiếng Anh: 'AI đang thay đổi cách chúng ta làm việc'.",
-      "failure_type": "out_of_scope",
-      "expect": {"no_tool": true, "behavior": "refuse"},
-      "metadata": {
-        "skill": "out_of_scope_translation",
-        "difficulty": "easy",
-        "what_it_tests": "Dịch thuật ngoài phạm vi research/news/social → không gọi bất kỳ tool nào, kể cả wiki/lookup."
-      }
-    },
-    {
-      "id": "G10_wiki_multiturn_lang",
-      "phase": "B",
-      "suite": "group",
-      "turns": [
-        {"role": "user", "content": "Tra Wikipedia giúp mình thông tin về Anthropic"},
-        {"role": "user", "content": "Ngắn gọn 2 câu thôi"},
-        {"role": "user", "content": "Dùng bản tiếng Việt nhé"}
-      ],
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "Anthropic", "sentences": 2, "lang": "vi"}}]},
-      "metadata": {
-        "skill": "multiturn_arg_carryover_wiki",
-        "difficulty": "hard",
-        "what_it_tests": "3 turns: giữ entity Anthropic từ lượt 1, sentences=2 từ lượt 2, lang=vi từ lượt 3."
-      }
-    },
-    {
-      "id": "G11_hackernews_sort_correction",
-      "phase": "B",
-      "suite": "group",
-      "turns": [
-        {"role": "user", "content": "Tìm trên Hacker News bài về MCP"},
-        {"role": "user", "content": "Lấy 3 bài liên quan nhất"},
-        {"role": "user", "content": "Thôi, 3 bài mới nhất ấy"}
-      ],
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "hackernews", "args": {"sort": "date", "limit": 3}}]},
-      "metadata": {
-        "skill": "multiturn_arg_correction_hn",
-        "difficulty": "hard",
-        "what_it_tests": "3 turns: sửa sort từ relevance (liên quan) sang date (mới nhất), giữ limit=3."
-      }
-    },
-    {
-      "id": "G12_switch_news_to_wiki",
-      "phase": "B",
-      "suite": "group",
-      "turns": [
-        {"role": "user", "content": "Tin AI hôm nay có gì?"},
-        {"role": "user", "content": "Khoan, cho mình biết OpenAI là gì trước đã"},
-        {"role": "user", "content": "Trả lời 1 câu thôi"}
-      ],
-      "failure_type": "wrong_tool",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "OpenAI", "sentences": 1}}]},
-      "metadata": {
-        "skill": "multiturn_switch_news_to_definition",
-        "difficulty": "hard",
-        "what_it_tests": "3 turns: đổi ý từ tin tức (lookup) sang định nghĩa (wiki); giữ entity OpenAI, sentences=1."
-      }
-    },
-    {
       "id": "G01_date_calc_diff_days",
       "phase": "B",
+      "suite": "group",
       "query": "Còn bao nhiêu ngày nữa đến 1/1/2027?",
       "failure_type": "wrong_tool",
       "expect": {
@@ -113,46 +23,61 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Routes date difference questions to date_calc and uses the current date."
+        "skill": "date_arithmetic_routing",
+        "difficulty": "easy",
+        "what_it_tests": "Câu hỏi đếm ngày → date_calc; dùng date1=\"today\" thay vì tự đoán ngày hôm nay, ngày đích đúng định dạng YYYY-MM-DD."
       }
     },
     {
-      "id": "G02_date_calc_add_days",
+      "id": "G02_wiki_definition_routing",
       "phase": "B",
-      "query": "100 ngày sau ngày 15/3/2026 là ngày nào?",
+      "suite": "group",
+      "query": "OpenAI là công ty gì? Trả lời gọn trong 2 câu.",
       "failure_type": "wrong_tool",
       "expect": {
         "tool_calls": [
           {
-            "name": "date_calc",
+            "name": "wiki",
             "args": {
-              "op": "add_days",
-              "date1": "2026-03-15",
-              "days": 100
+              "query": "OpenAI",
+              "sentences": 2
             }
           }
         ]
       },
       "metadata": {
-        "what_it_tests": "Routes date addition questions to date_calc with correct arguments."
+        "skill": "routing_entity_definition",
+        "difficulty": "easy",
+        "what_it_tests": "Câu hỏi định nghĩa một thực thể → wiki (không phải lookup/fetch); lấy đúng sentences=2."
       }
     },
     {
-      "id": "G03_date_calc_negative",
+      "id": "G03_hackernews_newest_arg",
       "phase": "B",
-      "query": "Tết Nguyên Đán có ý nghĩa gì?",
-      "failure_type": "unnecessary_tool",
+      "suite": "group",
+      "query": "Trên Hacker News có bài nào mới nhất về MCP không? Lấy 3 bài.",
+      "failure_type": "wrong_arg_value",
       "expect": {
-        "no_tool": true
+        "tool_calls": [
+          {
+            "name": "hackernews",
+            "args": {
+              "sort": "date",
+              "limit": 3
+            }
+          }
+        ]
       },
       "metadata": {
-        "what_it_tests": "Does not call date_calc for general cultural questions."
+        "skill": "arg_hn_sort_and_limit",
+        "difficulty": "medium",
+        "what_it_tests": "Nguồn Hacker News → hackernews; 'mới nhất' → sort=date; '3 bài' → limit=3."
       }
     },
-
     {
       "id": "G04_cite_format_paper",
       "phase": "B",
+      "suite": "group",
       "query": "Trích dẫn APA giúp tôi bài 'Attention Is All You Need' của Vaswani và Shazeer, 2017.",
       "failure_type": "wrong_tool",
       "expect": {
@@ -169,42 +94,136 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Routes explicit APA citation requests to cite_format."
+        "skill": "citation_apa_routing",
+        "difficulty": "medium",
+        "what_it_tests": "Yêu cầu APA rõ ràng → cite_format (không phải format); authors đúng dạng 'Last, First'."
       }
     },
     {
-      "id": "G05_cite_format_reference",
+      "id": "G05_translation_out_of_scope",
       "phase": "B",
-      "query": "Format reference cho bài báo này theo APA: Deep Learning Basics, tác giả Nguyen An, năm 2024, URL https://example.com/dl.",
-      "failure_type": "wrong_tool",
+      "suite": "group",
+      "query": "Dịch giúp mình câu sau sang tiếng Anh: 'AI đang thay đổi cách chúng ta làm việc'.",
+      "failure_type": "out_of_scope",
+      "expect": {"no_tool": true, "behavior": "refuse"},
+      "metadata": {
+        "skill": "out_of_scope_translation",
+        "difficulty": "easy",
+        "what_it_tests": "Dịch thuật ngoài phạm vi research/news/social → không gọi bất kỳ tool nào, kể cả wiki/lookup."
+      }
+    },
+    {
+      "id": "G06_wiki_multiturn_lang",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tra Wikipedia giúp mình thông tin về Anthropic"},
+        {"role": "user", "content": "Ngắn gọn 2 câu thôi"},
+        {"role": "user", "content": "Dùng bản tiếng Việt nhé"}
+      ],
+      "failure_type": "wrong_arg_value",
       "expect": {
         "tool_calls": [
           {
-            "name": "cite_format",
+            "name": "wiki",
             "args": {
-              "title": "Deep Learning Basics",
-              "authors": ["Nguyen, An"],
-              "year": 2024,
-              "url": "https://example.com/dl",
-              "style": "apa"
+              "query": "Anthropic",
+              "sentences": 2,
+              "lang": "vi"
             }
           }
         ]
       },
       "metadata": {
-        "what_it_tests": "Extracts publication metadata and formats an explicit APA reference."
+        "skill": "multiturn_arg_carryover_wiki",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: giữ entity Anthropic từ lượt 1, sentences=2 từ lượt 2, lang=vi từ lượt 3."
       }
     },
     {
-      "id": "G06_cite_format_negative",
+      "id": "G07_hackernews_sort_correction",
       "phase": "B",
-      "query": "APA là viết tắt của gì?",
-      "failure_type": "unnecessary_tool",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tìm trên Hacker News bài về MCP"},
+        {"role": "user", "content": "Lấy 3 bài liên quan nhất"},
+        {"role": "user", "content": "Thôi, 3 bài mới nhất ấy"}
+      ],
+      "failure_type": "wrong_arg_value",
       "expect": {
-        "no_tool": true
+        "tool_calls": [
+          {
+            "name": "hackernews",
+            "args": {
+              "sort": "date",
+              "limit": 3
+            }
+          }
+        ]
       },
       "metadata": {
-        "what_it_tests": "Does not call cite_format for a general question about APA."
+        "skill": "multiturn_arg_correction_hn",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: sửa sort từ relevance (liên quan) sang date (mới nhất), giữ limit=3."
+      }
+    },
+    {
+      "id": "G08_switch_news_to_wiki",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tin AI hôm nay có gì?"},
+        {"role": "user", "content": "Khoan, cho mình biết OpenAI là gì trước đã"},
+        {"role": "user", "content": "Trả lời 1 câu thôi"}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "wiki",
+            "args": {
+              "query": "OpenAI",
+              "sentences": 1
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "multiturn_switch_news_to_definition",
+        "difficulty": "hard",
+        "what_it_tests": "3 turns: đổi ý từ tin tức (lookup) sang định nghĩa (wiki); giữ entity OpenAI, sentences=1."
+      }
+    },
+    {
+      "id": "G09_extract_claims_multiturn",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Mình vừa đọc 2 tin: 'AI capex tăng 20% trong 2026' (nguồn: example.com) và 'MCP là giao thức mở' (nguồn: example.org)."},
+        {"role": "user", "content": "Tách các claim chính kèm nguồn giúp mình."}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "extract_claims"}]},
+      "metadata": {
+        "skill": "local_formatter_extract_claims",
+        "difficulty": "medium",
+        "what_it_tests": "Đã có item trong ngữ cảnh + yêu cầu tách claim → route tới extract_claims (tool local, không gọi mạng); không cần kiểm tra args để tránh phụ thuộc cách model tóm tắt lại item."
+      }
+    },
+    {
+      "id": "G10_deduplicate_items_multiturn",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Mình có 2 kết quả cho cùng một bài: 'OpenAI ra mắt model mới' ở https://a.example/1 và cũng bài đó ở https://a.example/1?utm=fb."},
+        {"role": "user", "content": "Gộp lại giúp mình, bỏ bài trùng."}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "deduplicate_items"}]},
+      "metadata": {
+        "skill": "local_formatter_deduplicate",
+        "difficulty": "medium",
+        "what_it_tests": "Yêu cầu bỏ item trùng → route tới deduplicate_items (không phải format); key mặc định url là đủ."
       }
     }
   ]

@@ -1,115 +1,87 @@
-# starter_v0 — tool declarations (intentionally vague).
-# Names and descriptions here are a rough first draft. Routing rules, name->handle
-# mapping, arg conventions (news/timeframe/Top), and the send-confirmation boundary
-# are NOT spelled out anywhere yet. Your job is to make these declarations + the
-# system prompt good enough that the agent routes correctly on the eval.
-#
-# If you rename a tool, keep the name in sync across:
-#   this file  ->  tools/__init__.py (TOOL_FUNCTIONS)  ->  data/eval_base.json + data/eval_research_extension.json
-# `pytest tests/test_tool_contract.py` checks this sync for you.
-#
-# TODO CP2 (student):
-#   - Rewrite every description: what it does, WHEN to use it, WHEN NOT to use it.
-#   - Spell out arg conventions in parameter descriptions (handle format, topic/timeframe, search_type).
-#   - Make the `send` confirmation boundary explicit.
-#   - Declare your new tool(s) at the end of this file.
+# starter_v0 — tool declarations (CP2/CP3, rewritten by the group).
+# Every entry must stay in sync with tools/__init__.py (TOOL_FUNCTIONS) and with the
+# `expect.tool_calls[].name` values in data/eval_*.json; `pytest tests/test_tool_contract.py`
+# checks this for you. Each description says what the tool does, WHEN to use it and
+# WHEN NOT to use it, and spells out the argument conventions.
 tools:
   # ---------------- Core tools ----------------
   - name: clarify
-    description: "Hãy đặt MỘT câu hỏi làm rõ và chờ phản hồi. Sử dụng khi thiếu thông tin cần thiết, hoặc khi cần xác nhận trước khi thực hiện thao tác. Không áp dụng nếu yêu cầu ban đầu đã đủ thông tin. Luôn đặt response_type tường minh: 'text' cho câu hỏi mở, 'yes_no' khi xin xác nhận, 'choice' khi có options."
+    description: "Hãy đặt MỘT câu hỏi làm rõ và chờ phản hồi. Sử dụng khi thiếu thông tin cần thiết (tài khoản, URL, chủ đề), hoặc khi cần xác nhận trước khi thực hiện thao tác bên ngoài. Không áp dụng nếu yêu cầu ban đầu đã đủ thông tin. Luôn đặt response_type tường minh: 'text' cho câu hỏi mở, 'yes_no' khi xin xác nhận, 'choice' khi có options."
     parameters:
       type: object
       properties:
-
         question: {type: string, default: "", description: "Câu hỏi"}
         response_type: {type: string, enum: [text, yes_no, choice], default: "text", description: "Bắt buộc đặt rõ ràng: text cho câu hỏi mở, yes_no khi xin xác nhận, choice khi có options (always pass explicitly)"}
-        options: {type: array, default: [], items: {type: string}, description: "Các lựa chọn"}
+        options: {type: array, default: [], items: {type: string}, description: "Các lựa chọn (chỉ dùng với response_type=choice)"}
       required: [question, response_type]
 
   - name: timeline
-    description: "Các bài đăng gần đây từ tài khoản X/Twitter mà người dùng đã nêu tên. Tên tài khoản (screenname) là tên người dùng không bao gồm ký tự '@' (ví dụ: Sam Altman -> sama, Elon Musk -> elonmusk); tuyệt đối không tự đoán tên tài khoản – hãy yêu cầu làm rõ nếu cần. 'limit' là số lượng bài đăng mà người dùng yêu cầu (mặc định là 5)."
+    description: "Các bài đăng gần đây từ tài khoản X/Twitter mà người dùng đã nêu tên. Tên tài khoản (screenname) là tên người dùng không bao gồm ký tự '@' (ví dụ: Sam Altman -> sama, Elon Musk -> elonmusk); tuyệt đối không tự đoán tên tài khoản – hãy gọi clarify nếu người dùng không nêu. KHÔNG dùng khi người dùng chỉ có chủ đề mà không có tài khoản (dùng social_search) hay khi chưa rõ cả hai (dùng clarify). 'limit' là số lượng bài đăng người dùng yêu cầu (mặc định 5)."
     parameters:
       type: object
       properties:
-
         screenname: {type: string, default: "", description: "Tên tài khoản, không có ký tự '@' (handle without @)"}
-        limit: {type: integer, default: 5, description: "Số lượng"}
-        screenname: { type: string, default: "", description: "Tên tài khoản" }
-        limit: { type: integer, default: 5, description: "Số lượng" }
+        limit: {type: integer, default: 5, description: "Số lượng bài đăng"}
       required: [screenname]
 
   - name: social_search
-    description: "Tìm kiếm bài đăng trên X theo chủ đề hoặc từ khóa. Sử dụng khi người dùng muốn biết mọi người đang nói gì về một chủ đề. `query` = chỉ từ khóa. `search_type` = 'Top' cho bài đăng phổ biến/viral', 'Latest' cho bài đăng mới nhất. `limit` = số lượng. "
+    description: "Tìm kiếm bài đăng trên X/Twitter theo chủ đề hoặc từ khóa. Sử dụng khi người dùng muốn biết mọi người đang nói gì về một chủ đề và đã nêu chủ đề/từ khóa. `query` = chỉ từ khóa (không dùng từ chung chung như 'tweet', 'post', 'latest'). `search_type` = 'Top' cho bài đăng phổ biến/viral, 'Latest' cho bài đăng mới nhất. KHÔNG dùng khi người dùng hỏi tài khoản cụ thể (dùng timeline) hoặc khi thiếu cả tài khoản lẫn chủ đề (dùng clarify)."
     parameters:
       type: object
       properties:
-
-        query: {type: string, default: "", description: "Từ khóa"}
-        search_type: {type: string, enum: [Latest, Top], default: "Latest", description: "Cách sắp xếp: 'Top' cho bài phổ biến/viral, 'Latest' cho bài mới nhất (Top for popular, Latest for newest)"}
+        query: {type: string, default: "", description: "Từ khóa/chủ đề"}
+        search_type: {type: string, enum: [Latest, Top], default: "Latest", description: "Cách sắp xếp: 'Top' cho bài phổ biến/viral, 'Latest' cho bài mới nhất"}
         limit: {type: integer, default: 5, description: "Số lượng"}
       required: [query]
 
   - name: lookup
-    description: >
-      Search the internet for general information or news.
-      Use topic="news" for news searches and topic="general"
-      for other searches.
-      For news searches, query must contain only the subject,
-      without adding the word "news".
-      Examples:
-      - AI news today: query="AI", topic="news", timeframe="day".
-      Do not use this tool to search social media posts;
-      use social_search instead.
+    description: "Tìm kiếm trên web công khai. Sử dụng để tra cứu thông tin/tin tức trên web khi không có URL cụ thể. Tham số `topic` nhận 'news' cho tin tức/báo chí hoặc 'general' cho tra cứu thông thường. Tham số `timeframe` xác định khoảng thời gian: 'hôm nay' (day), 'tuần này' (week), 'tháng này' (month), 'năm nay' (year). Tham số `query` chỉ chứa từ khóa chính (ví dụ 'AI'); không thêm 'tin tức'/'news' hay mốc thời gian vào `query` vì đã có `topic`/`timeframe`. KHÔNG dùng để tìm bài đăng X (dùng social_search), Hacker News (dùng hackernews), paper (dùng papers), hay đọc một URL cụ thể (dùng fetch). `max_results` là số kết quả mong muốn."
     parameters:
       type: object
       properties:
-        query: { type: string, default: "", description: "Truy vấn" }
-        topic: { type: string, enum: [general, news], default: "general", description: "Phân loại" }
-        timeframe: { type: string, enum: [day, week, month, year], default: "week", description: "Khoảng thời gian" }
-        max_results: { type: integer, default: 5, description: "Số kết quả" }
+        query: {type: string, default: "", description: "Từ khóa chính, chỉ chủ đề (bare keywords, no 'news'/time words)"}
+        topic: {type: string, enum: [general, news], default: "general", description: "Phân loại: 'news' cho tin tức/báo chí, 'general' còn lại (explicitly pass news|general)"}
+        timeframe: {type: string, enum: [day, week, month, year], default: "week", description: "Khoảng thời gian: day|week|month|year (always pass explicitly when the user names a period)"}
+        max_results: {type: integer, default: 5, description: "Số kết quả"}
       required: [query]
 
   - name: fetch
-    description: "Đọc nội dung từ MỘT đường dẫn (URL) cụ thể mà người dùng đã cung cấp (trong lượt này hoặc lượt trước đó). Tuyệt đối không tự bịa ra hoặc đoán đường dẫn – thay vào đó, hãy yêu cầu làm rõ."
+    description: "Đọc nội dung từ MỘT đường dẫn (URL) cụ thể mà người dùng đã cung cấp (trong lượt này hoặc lượt trước đó). Tuyệt đối không tự bịa ra hoặc đoán đường dẫn – thay vào đó hãy gọi clarify để xin link. KHÔNG dùng để tìm kiếm thông tin (dùng lookup)."
     parameters:
       type: object
       properties:
-        url: { type: string, default: "", description: "Địa chỉ" }
+        url: {type: string, default: "", description: "Địa chỉ URL đầy đủ"}
       required: [url]
 
   - name: format
-    description: "Chuyển đổi các mục bạn đã thu thập thành một bản tóm tắt định dạng Markdown. Chỉ sử dụng sau khi các thao tác lookup/social_search/fetch đã trả về kết quả; tuyệt đối không dùng cho mục đích tìm kiếm."
+    description: "Chuyển các mục đã thu thập thành một bản tóm tắt Markdown. Chỉ sử dụng sau khi lookup/social_search/fetch/papers/wiki/hackernews đã trả về kết quả; tuyệt đối không dùng cho mục đích tìm kiếm."
     parameters:
       type: object
       properties:
         items:
           type: array
           default: []
-          description: "Danh sách item"
+          description: "Danh sách item đã thu thập"
           items:
             type: object
             properties:
-              title: { type: string }
-              url: { type: string }
-              source: { type: string }
-              summary: { type: string }
-              section: { type: string }
-        template: { type: string, enum: [brief, sections, bullets, thread, daily_ai_vn], default: "sections", description: "Khuôn" }
-        headline: { type: string, default: "", description: "Tiêu đề" }
+              title: {type: string}
+              url: {type: string}
+              source: {type: string}
+              summary: {type: string}
+              section: {type: string}
+        template: {type: string, enum: [brief, sections, bullets, thread, daily_ai_vn], default: "sections", description: "Khuôn trình bày"}
+        headline: {type: string, default: "", description: "Tiêu đề"}
       required: [items, template]
 
-  # ---------------- Bonus tools ----------------
+  # ---------------- Optional / bonus tools ----------------
   - name: send
-    description: "Gửi tin nhắn đến kênh Telegram của nhóm. Chỉ thực hiện lệnh `send` sau khi người dùng đã xác nhận rõ ràng trong lượt tương tác trước đó (với tham số `confirmed=true`). Nếu người dùng yêu cầu đăng/gửi/xuất bản nội dung mà chưa có xác nhận từ trước, tuyệt đối không gọi lệnh `send` — thay vào đó, hãy gọi lệnh `clarify` với tham số `response_type='yes_no'`. Không bao giờ sử dụng lệnh `send` để trả lời câu hỏi hoặc hiển thị bản tóm tắt."
+    description: "Gửi tin nhắn đến kênh Telegram của nhóm. Chỉ thực hiện `send` sau khi người dùng đã xác nhận rõ ràng trong lượt trước đó (với `confirmed=true`). Nếu người dùng yêu cầu đăng/gửi/xuất bản mà chưa có xác nhận, tuyệt đối không gọi `send` — hãy gọi `clarify` với `response_type='yes_no'`. Không bao giờ dùng `send` để trả lời câu hỏi hoặc hiển thị bản tóm tắt."
     parameters:
       type: object
       properties:
-
-        text: {type: string, default: "", description: "Nội dung"}
-        confirmed: {type: boolean, default: false, description: "Cờ xác nhận: chỉ true sau khi người dùng đã xác nhận ở lượt trước (true only after the user confirmed in an earlier turn)"}
-
-        text: { type: string, default: "", description: "Nội dung" }
-        confirmed: { type: boolean, default: false, description: "Cờ xác nhận" }
+        text: {type: string, default: "", description: "Nội dung sẽ gửi"}
+        confirmed: {type: boolean, default: false, description: "Cờ xác nhận: chỉ true sau khi người dùng đã xác nhận ở lượt trước"}
       required: [text]
 
   - name: policy
@@ -117,10 +89,10 @@ tools:
     parameters:
       type: object
       properties:
-        query: { type: string, default: "", description: "Truy vấn" }
+        query: {type: string, default: "", description: "Truy vấn"}
         policy_area:
-          { type: string, enum: [all, ai_research, source_citation, data_privacy, external_publishing, tool_usage], default: "all", description: "Nhóm" }
-        top_k: { type: integer, default: 3, description: "Số mục" }
+          {type: string, enum: [all, ai_research, source_citation, data_privacy, external_publishing, tool_usage], default: "all", description: "Nhóm policy cần tìm"}
+        top_k: {type: integer, default: 3, description: "Số mục trả về"}
       required: [query]
 
   - name: papers
@@ -128,9 +100,9 @@ tools:
     parameters:
       type: object
       properties:
-        query: { type: string, default: "", description: "Từ khóa" }
-        max_results: { type: integer, default: 5, description: "Số lượng" }
-        sort_by: { type: string, enum: [relevance, lastUpdatedDate, submittedDate], default: "relevance", description: "Sắp xếp" }
+        query: {type: string, default: "", description: "Từ khóa"}
+        max_results: {type: integer, default: 5, description: "Số lượng"}
+        sort_by: {type: string, enum: [relevance, lastUpdatedDate, submittedDate], default: "relevance", description: "Sắp xếp"}
       required: [query]
 
   - name: paper_text
@@ -138,11 +110,12 @@ tools:
     parameters:
       type: object
       properties:
-        arxiv_url: { type: string, default: "", description: "ID hoặc địa chỉ" }
-        max_pages: { type: integer, default: 5, description: "Số trang" }
-        max_chars: { type: integer, default: 8000, description: "Số ký tự" }
+        arxiv_url: {type: string, default: "", description: "arXiv ID hoặc URL"}
+        max_pages: {type: integer, default: 5, description: "Số trang tối đa"}
+        max_chars: {type: integer, default: 8000, description: "Số ký tự tối đa"}
       required: [arxiv_url]
-      
+
+  # ---------------- Team-added tools (CP3) ----------------
   - name: wiki
     description: "Tra cứu nền tảng bách khoa về MỘT thực thể cụ thể (người, tổ chức, sản phẩm, khái niệm) từ Wikipedia, trả tóm tắt ngắn + URL trang gốc. Dùng khi người dùng hỏi 'X là gì/là ai', cần 1-2 câu bối cảnh trước khi tìm tin, hoặc cần chuẩn hóa tên thực thể. KHÔNG dùng cho tin mới (dùng lookup với topic=news), bài đăng cộng đồng (dùng social_search), paper (dùng papers), hoặc khi chưa rõ thực thể (dùng clarify)."
     parameters:
@@ -162,71 +135,54 @@ tools:
         sort: {type: string, enum: [relevance, date], default: "relevance", description: "'relevance' = liên quan nhất, 'date' = mới nhất"}
         limit: {type: integer, default: 5, description: "Số bài, 1-20 (mặc định 5)"}
       required: [query]
+
   - name: date_calc
-    description: >
-      Calculate dates accurately using date arithmetic.
-      Use when the user asks for the number of days between dates,
-      a date after or before a given number of days, today's date,
-      or the weekday of a specific date.
-      Do not use for general questions about holidays, calendars,
-      or cultural events.
-      Supported operations: today, diff_days, add_days, weekday.
-      Dates must use YYYY-MM-DD format.
-      For diff_days, return date2 minus date1.
-      For add_days, provide date1 and integer days.
+    description: "Tính toán ngày tháng chính xác. Dùng khi người dùng hỏi còn bao nhiêu ngày đến một mốc, ngày sau/sau N ngày là ngày nào, hôm nay là ngày gì, hoặc một ngày là thứ mấy. KHÔNG dùng cho câu hỏi chung về ngày lễ hay ý nghĩa văn hóa. op nhận: today, diff_days, add_days, weekday; ngày theo định dạng YYYY-MM-DD, hoặc literal 'today' khi nói về hôm nay. diff_days trả date2 - date1."
     parameters:
       type: object
       properties:
-        op:
-          type: string
-          enum: [today, diff_days, add_days, weekday]
-          description: Operation to perform
-        date1:
-          type: string
-          description: >
-            First date in YYYY-MM-DD format, or "today" to represent
-            the current date.
-        date2:
-          type: string
-          description: >
-            Second date in YYYY-MM-DD format, or "today" to represent
-            the current date. Used for diff_days.
-        days:
-          type: integer
-          description: Number of days to add, for add_days
+        op: {type: string, enum: [today, diff_days, add_days, weekday], description: "Phép tính cần thực hiện"}
+        date1: {type: string, description: "Ngày thứ nhất YYYY-MM-DD, hoặc 'today'"}
+        date2: {type: string, description: "Ngày thứ hai YYYY-MM-DD, hoặc 'today' (dùng cho diff_days)"}
+        days: {type: integer, description: "Số ngày cần cộng (dùng cho add_days)"}
       required: [op]
 
   - name: cite_format
-    description: >
-      Format publication metadata into an APA 7 citation.
-      Use when the user explicitly asks to create, format, or convert
-      a reference or citation into APA style.
-      Do not use for general questions about citation styles,
-      such as asking what APA means.
-      Only APA style is supported.
-      Authors must be provided as a list in "Last, First" format.
-      Missing year is represented as (n.d.).
-      Missing URL is omitted.
+    description: "Tạo citation APA 7 từ metadata ấn phẩm. Chỉ dùng khi người dùng yêu cầu rõ ràng việc tạo/định dạng/chuyển một reference hoặc citation sang APA. KHÔNG dùng cho câu hỏi chung về citation style (ví dụ 'APA là viết tắt của gì'). Chỉ hỗ trợ APA. authors là list dạng 'Last, First'; thiếu year -> (n.d.); thiếu url -> bỏ phần URL."
     parameters:
       type: object
       properties:
-        title:
-          type: string
-          description: Publication title
-        authors:
-          type: array
-          items:
-            type: string
-          description: Authors in "Last, First" format
-        year:
-          type: integer
-          description: Publication year, optional
-        url:
-          type: string
-          description: Publication URL, optional
-        style:
-          type: string
-          enum: [apa]
-          description: Citation style. Only APA is supported.
+        title: {type: string, description: "Tiêu đề ấn phẩm"}
+        authors: {type: array, items: {type: string}, description: "Danh sách tác giả dạng 'Last, First'"}
+        year: {type: integer, description: "Năm xuất bản (tùy chọn)"}
+        url: {type: string, description: "URL ấn phẩm (tùy chọn)"}
+        style: {type: string, enum: [apa], description: "Citation style, chỉ hỗ trợ 'apa'"}
       required: [title, authors]
 
+  - name: extract_claims
+    description: "Tách các claim (khẳng định) từ những item đã thu thập, giữ lại nguồn/URL của từng item. Là tool local, không gọi mạng, không kiểm chứng nội dung. Dùng khi người dùng muốn 'tách claim', 'liệt kê nhận định kèm nguồn' sau khi đã có kết quả tìm kiếm. KHÔNG dùng để tìm dữ liệu mới (dùng lookup/hackernews/wiki) hay để định dạng digest (dùng format)."
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          default: []
+          description: "Danh sách item đã thu thập (summary/claim, source/url)"
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              url: {type: string}
+              source: {type: string}
+              summary: {type: string}
+              claim: {type: string}
+      required: [items]
+
+  - name: deduplicate_items
+    description: "Loại các item trùng lặp theo 'url' hoặc 'title', giữ lần xuất hiện đầu tiên. Là tool local, không gọi mạng, không fetch hay xếp hạng lại. Dùng khi gộp kết quả từ nhiều nguồn và người dùng muốn 'bỏ bài trùng', 'gộp lại cho gọn'. KHÔNG dùng thay cho format hay để chọn lọc nội dung tốt nhất."
+    parameters:
+      type: object
+      properties:
+        items: {type: array, default: [], description: "Danh sách item cần lọc trùng", items: {type: object}}
+        key: {type: string, enum: [url, title], default: "url", description: "Trường dùng để xác định trùng lặp"}
+      required: [items]

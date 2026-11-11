@@ -5,13 +5,12 @@
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
   "cases": [
     {
-
       "id": "G07_wiki_definition_routing",
       "phase": "B",
       "suite": "group",
       "query": "OpenAI là công ty gì? Trả lời gọn trong 2 câu.",
       "failure_type": "wrong_tool",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "OpenAI", "sentences": 2}}]},
+      "expect": { "tool_calls": [{ "name": "wiki", "args": { "query": "OpenAI", "sentences": 2 } }] },
       "metadata": {
         "skill": "routing_entity_definition",
         "difficulty": "easy",
@@ -24,7 +23,7 @@
       "suite": "group",
       "query": "Trên Hacker News có bài nào mới nhất về MCP không? Lấy 3 bài.",
       "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "hackernews", "args": {"sort": "date", "limit": 3}}]},
+      "expect": { "tool_calls": [{ "name": "hackernews", "args": { "sort": "date", "limit": 3 } }] },
       "metadata": {
         "skill": "arg_hn_sort_and_limit",
         "difficulty": "medium",
@@ -37,7 +36,7 @@
       "suite": "group",
       "query": "Dịch giúp mình câu sau sang tiếng Anh: 'AI đang thay đổi cách chúng ta làm việc'.",
       "failure_type": "out_of_scope",
-      "expect": {"no_tool": true, "behavior": "refuse"},
+      "expect": { "no_tool": true, "behavior": "refuse" },
       "metadata": {
         "skill": "out_of_scope_translation",
         "difficulty": "easy",
@@ -49,12 +48,12 @@
       "phase": "B",
       "suite": "group",
       "turns": [
-        {"role": "user", "content": "Tra Wikipedia giúp mình thông tin về Anthropic"},
-        {"role": "user", "content": "Ngắn gọn 2 câu thôi"},
-        {"role": "user", "content": "Dùng bản tiếng Việt nhé"}
+        { "role": "user", "content": "Tra Wikipedia giúp mình thông tin về Anthropic" },
+        { "role": "user", "content": "Ngắn gọn 2 câu thôi" },
+        { "role": "user", "content": "Dùng bản tiếng Việt nhé" }
       ],
       "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "Anthropic", "sentences": 2, "lang": "vi"}}]},
+      "expect": { "tool_calls": [{ "name": "wiki", "args": { "query": "Anthropic", "sentences": 2, "lang": "vi" } }] },
       "metadata": {
         "skill": "multiturn_arg_carryover_wiki",
         "difficulty": "hard",
@@ -66,12 +65,12 @@
       "phase": "B",
       "suite": "group",
       "turns": [
-        {"role": "user", "content": "Tìm trên Hacker News bài về MCP"},
-        {"role": "user", "content": "Lấy 3 bài liên quan nhất"},
-        {"role": "user", "content": "Thôi, 3 bài mới nhất ấy"}
+        { "role": "user", "content": "Tìm trên Hacker News bài về MCP" },
+        { "role": "user", "content": "Lấy 3 bài liên quan nhất" },
+        { "role": "user", "content": "Thôi, 3 bài mới nhất ấy" }
       ],
       "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "hackernews", "args": {"sort": "date", "limit": 3}}]},
+      "expect": { "tool_calls": [{ "name": "hackernews", "args": { "sort": "date", "limit": 3 } }] },
       "metadata": {
         "skill": "multiturn_arg_correction_hn",
         "difficulty": "hard",
@@ -83,12 +82,12 @@
       "phase": "B",
       "suite": "group",
       "turns": [
-        {"role": "user", "content": "Tin AI hôm nay có gì?"},
-        {"role": "user", "content": "Khoan, cho mình biết OpenAI là gì trước đã"},
-        {"role": "user", "content": "Trả lời 1 câu thôi"}
+        { "role": "user", "content": "Tin AI hôm nay có gì?" },
+        { "role": "user", "content": "Khoan, cho mình biết OpenAI là gì trước đã" },
+        { "role": "user", "content": "Trả lời 1 câu thôi" }
       ],
       "failure_type": "wrong_tool",
-      "expect": {"tool_calls": [{"name": "wiki", "args": {"query": "OpenAI", "sentences": 1}}]},
+      "expect": { "tool_calls": [{ "name": "wiki", "args": { "query": "OpenAI", "sentences": 1 } }] },
       "metadata": {
         "skill": "multiturn_switch_news_to_definition",
         "difficulty": "hard",
@@ -203,8 +202,66 @@
       "expect": {
         "no_tool": true
       },
+      "metadata": { "what_it_tests": "Does not call cite_format for a general question about APA." }
+    },
+    {
+      "id": "G13_extract_claims_from_results",
+      "phase": "B",
+      "query": "Tách các nhận định chính từ những kết quả nghiên cứu và giữ lại nguồn của từng nhận định.",
+      "failure_type": "wrong_tool",
+      "expect": { "tool_calls": [{ "name": "extract_claims", "args": {} }] },
       "metadata": {
-        "what_it_tests": "Does not call cite_format for a general question about APA."
+        "what_it_tests": "Yêu cầu trích xuất claim và nguồn từ items đã có phải route tới extract_claims."
+      }
+    },
+    {
+      "id": "G14_extract_claims_with_sources",
+      "phase": "B",
+      "query": "Lấy các claim không rỗng trong danh sách bài báo vừa thu thập, không cần tìm thêm trên web.",
+      "failure_type": "wrong_tool",
+      "expect": { "tool_calls": [{ "name": "extract_claims", "args": {} }] },
+      "metadata": {
+        "what_it_tests": "Phân biệt việc trích xuất claim local với việc gọi lookup hoặc fetch."
+      }
+    },
+    {
+      "id": "G15_extract_claims_before_format",
+      "phase": "B",
+      "query": "Trước khi trình bày bản tin, hãy rút ra các claim chính kèm source từ kết quả research.",
+      "failure_type": "wrong_tool",
+      "expect": { "tool_calls": [{ "name": "extract_claims", "args": {} }] },
+      "metadata": {
+        "what_it_tests": "Nhận diện extract_claims như bước xử lý dữ liệu trước format."
+      }
+    },
+    {
+      "id": "G16_deduplicate_by_url",
+      "phase": "B",
+      "query": "Loại các bài nghiên cứu trùng nhau theo URL trước khi tạo bản tin.",
+      "failure_type": "wrong_tool",
+      "expect": { "tool_calls": [{ "name": "deduplicate_items", "args": {} }] },
+      "metadata": {
+        "what_it_tests": "Yêu cầu loại item trùng theo URL phải route tới deduplicate_items với key=url."
+      }
+    },
+    {
+      "id": "G17_deduplicate_by_title",
+      "phase": "B",
+      "query": "Lọc các kết quả có cùng tiêu đề, giữ lại kết quả xuất hiện đầu tiên.",
+      "failure_type": "wrong_arg_value",
+      "expect": { "tool_calls": [{ "name": "deduplicate_items", "args": { "key": "title" } }] },
+      "metadata": {
+        "what_it_tests": "Từ 'cùng tiêu đề' phải được chuyển thành key=title."
+      }
+    },
+    {
+      "id": "G18_deduplicate_then_extract",
+      "phase": "B",
+      "query": "Hãy loại bài trùng theo URL trong danh sách kết quả hiện có, chưa cần tách claim.",
+      "failure_type": "wrong_tool",
+      "expect": { "tool_calls": [{ "name": "deduplicate_items", "args": {} }] },
+      "metadata": {
+        "what_it_tests": "Phân biệt bước loại trùng với extract_claims khi user yêu cầu chỉ làm sạch danh sách."
       }
     }
   ]

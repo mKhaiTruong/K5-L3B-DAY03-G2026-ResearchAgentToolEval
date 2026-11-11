@@ -1,0 +1,336 @@
+{
+  "run_id": "v3_B_base_openrouter_20261110T221155467525",
+  "version": "v3",
+  "artifact_version": "v3+pd3bad49a212b+t4736165a01c5",
+  "prompt_hash": "d3bad49a212b28517808040746241969f776b306d6e863147c955e6db285fc94",
+  "tools_hash": "4736165a01c5f2f0ca89d80d270593ac5b55974c81ee4e3d71732eddf4dc9f74",
+  "phase": "B",
+  "suite": "base",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "D:\\project\\K5-L3B-DAY03-G2026-ResearchAgentToolEval\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "D:\\project\\K5-L3B-DAY03-G2026-ResearchAgentToolEval\\starter_v0\\artifacts\\tools.yaml",
+  "eval_cases": "data\\eval_group.json",
+  "dataset_id": "day03_v2_research_group",
+  "dataset_role": "group",
+  "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
+  "generated_at": "2026-11-10T22:11:55",
+  "summary": {
+    "total_cases": 6,
+    "measured_cases": 6,
+    "provider_error_cases": 0,
+    "passed_cases": 6,
+    "case_accuracy": 1.0,
+    "tool_routing_accuracy": 1.0,
+    "argument_accuracy": 1.0,
+    "multiturn_accuracy": null,
+    "failure_counts": {},
+    "observed_mismatch_counts": {}
+  },
+  "results": [
+    {
+      "id": "G01_extract_claims_from_results",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Yêu cầu trích xuất claim và nguồn từ items đã có phải route tới extract_claims."
+      },
+      "input": "Tách các nhận định chính từ những kết quả nghiên cứu và giữ lại nguồn của từng nhận định.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "extract_claims",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "extract_claims",
+            "claims": [],
+            "claim_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "G02_extract_claims_with_sources",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phân biệt việc trích xuất claim local với việc gọi lookup hoặc fetch."
+      },
+      "input": "Lấy các claim không rỗng trong danh sách bài báo vừa thu thập, không cần tìm thêm trên web.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "extract_claims",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "extract_claims",
+            "claims": [],
+            "claim_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "G03_extract_claims_before_format",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Nhận diện extract_claims như bước xử lý dữ liệu trước format."
+      },
+      "input": "Trước khi trình bày bản tin, hãy rút ra các claim chính kèm source từ kết quả research.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "extract_claims",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "extract_claims",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "extract_claims",
+            "claims": [],
+            "claim_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "G04_deduplicate_by_url",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Yêu cầu loại item trùng theo URL phải route tới deduplicate_items với key=url."
+      },
+      "input": "Loại các bài nghiên cứu trùng nhau theo URL trước khi tạo bản tin.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "deduplicate_items",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "deduplicate_items",
+            "items": [],
+            "removed_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "G05_deduplicate_by_title",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Từ 'cùng tiêu đề' phải được chuyển thành key=title."
+      },
+      "input": "Lọc các kết quả có cùng tiêu đề, giữ lại kết quả xuất hiện đầu tiên.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {
+              "key": "title"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {
+              "items": [],
+              "key": "title"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "deduplicate_items",
+          "args": {
+            "items": [],
+            "key": "title"
+          },
+          "result": {
+            "tool": "deduplicate_items",
+            "items": [],
+            "removed_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "G06_deduplicate_then_extract",
+      "phase": "B",
+      "suite": "base",
+      "case_suite": "base",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phân biệt bước loại trùng với extract_claims khi user yêu cầu chỉ làm sạch danh sách."
+      },
+      "input": "Hãy loại bài trùng theo URL trong danh sách kết quả hiện có, chưa cần tách claim.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "deduplicate_items",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "deduplicate_items",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "deduplicate_items",
+            "items": [],
+            "removed_count": 0
+          }
+        }
+      ]
+    }
+  ]
+}

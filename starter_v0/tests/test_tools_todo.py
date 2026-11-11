@@ -121,7 +121,7 @@ def test_send_confirmed_posts_to_telegram(monkeypatch, fake_http) -> None:
     assert result["status"] == "sent"
 
 
-def test_send_confirmed_without_env_returns_error_and_no_request(fake_http) -> None:
+def test_send_confirmed_without_env_returns_error_and_no_request(monkeypatch, fake_http) -> None:
     calls = fake_http(FakeResponse({"ok": True}))
 
     result = TOOL_FUNCTIONS["send"](text="Bản tin", confirmed=True)
@@ -604,3 +604,40 @@ def test_cite_format_unsupported_style():
 
     assert "error" in result
     assert "style" in result["error"].lower()
+
+def test_extract_claims_keeps_claim_and_source() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]([
+        {"summary": "AI adoption grew.", "source": "Example News"},
+        {"title": "No claim"},
+    ])
+    assert result["claim_count"] == 1
+    assert result["claims"] == [{"claim": "AI adoption grew.", "source": "Example News"}]
+
+
+def test_extract_claims_rejects_non_list_input() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]("not-a-list")
+    assert result == {"tool": "extract_claims", "error": "items_must_be_list"}
+
+
+def test_extract_claims_skips_malformed_items_without_raising() -> None:
+    result = TOOL_FUNCTIONS["extract_claims"]([None, {"summary": ""}, 4])
+    assert result["claim_count"] == 0
+    assert result["claims"] == []
+
+
+def test_deduplicate_items_keeps_first_url() -> None:
+    items = [{"url": "https://example.com/a", "title": "First"}, {"url": " HTTPS://EXAMPLE.COM/A ", "title": "Second"}]
+    result = TOOL_FUNCTIONS["deduplicate_items"](items)
+    assert result["items"] == [items[0]]
+    assert result["removed_count"] == 1
+
+
+def test_deduplicate_items_rejects_unknown_key() -> None:
+    result = TOOL_FUNCTIONS["deduplicate_items"]([], key="summary")
+    assert result == {"tool": "deduplicate_items", "error": "invalid_key"}
+
+
+def test_deduplicate_items_skips_malformed_items_without_raising() -> None:
+    result = TOOL_FUNCTIONS["deduplicate_items"]([None, {"title": "Kept"}, 4], key="title")
+    assert result["items"] == [{"title": "Kept"}]
+    assert result["removed_count"] == 2

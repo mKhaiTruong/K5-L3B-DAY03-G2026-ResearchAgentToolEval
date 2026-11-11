@@ -17,10 +17,11 @@ from .policy.tool import search_company_policy
 from .social_search.tool import search_tweets
 from .send.tool import send_telegram
 from .lookup.tool import web_search
-from tools.cite_format.tool import cite_format
-from tools.date_calc.tool import date_calc
+# Team-added tools (CP3), written by three members and merged here.
 from .wiki.tool import wikipedia_summary
 from .hackernews.tool import hackernews_search
+from .date_calc.tool import date_calc
+from .cite_format.tool import cite_format
 from .extract_claims.tool import extract_claims
 from .deduplicate_items.tool import deduplicate_items
 
@@ -42,10 +43,12 @@ TOOL_FUNCTIONS = {
     "papers": arxiv_search,
     "paper_text": get_arxiv_paper_text,
     # Team-added tools (CP3): encyclopedic background + tech-community signal.
-    "cite_format": cite_format,
-    "date_calc": date_calc,
     "wiki": wikipedia_summary,
     "hackernews": hackernews_search,
+    # Team-added tools (CP3): date arithmetic + APA citations.
+    "date_calc": date_calc,
+    "cite_format": cite_format,
+    # Team-added tools (CP3): claim extraction + duplicate removal (local formatters).
     "extract_claims": extract_claims,
     "deduplicate_items": deduplicate_items,
 }
